@@ -2,6 +2,7 @@
 
 ## About Mongo CDC
 * CDC Stream is a feature of Mongo ReplicaSet
+* You can also read the entire changed document if you pass option "updateLookup"
 * The MongoDB should run in replica mode (even if it's single instance) for the CDC to work.
 * The MongoDB writes all operations to oplog, and streams it from there.
 * You can resume the stream from last consumed event using `resume_after` field. See `main.py` for example
