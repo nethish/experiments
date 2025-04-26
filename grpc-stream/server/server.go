@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -78,13 +79,32 @@ func (s *userServiceServer) ChatWithUsers(stream pb.UserService_ChatWithUsersSer
 	}
 }
 
+// Test the limitation of number of streams in http2
+func (s *userServiceServer) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserResponse, error) {
+	log.Printf("Received request: %d", req.GetId())
+	time.Sleep(10 * time.Second)
+	return nil, nil
+}
+
+func LoggingInterceptor(
+	ctx context.Context,
+	req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (interface{}, error) {
+	log.Println("Before handling:", info.FullMethod)
+	resp, err := handler(ctx, req)
+	log.Println("After handling:", info.FullMethod)
+	return resp, err
+}
+
 func main() {
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.MaxConcurrentStreams(10), grpc.UnaryInterceptor(LoggingInterceptor))
 	pb.RegisterUserServiceServer(grpcServer, &userServiceServer{})
 
 	log.Println("Server listening on :50051")

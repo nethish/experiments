@@ -4,12 +4,28 @@ import (
 	"context"
 	"io"
 	"log"
+	"sync"
 	"time"
 
 	"google.golang.org/grpc"
 
 	pb "github.com/nethish/playground/grpc-stream/gen/api"
 )
+
+func spamGetUser(client pb.UserServiceClient) {
+	wg := sync.WaitGroup{}
+	for i := range 1000 {
+		wg.Add(1)
+		go func(i int) {
+			a, b := client.GetUser(context.Background(), &pb.GetUserRequest{Id: int64(i)})
+			log.Printf("Request %d sent: %v %v\n", i, a, b)
+			wg.Done()
+		}(i)
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	wg.Wait()
+}
 
 func listUsers(client pb.UserServiceClient) {
 	log.Println("Calling ListUsers (Server Streaming)...")
@@ -110,4 +126,5 @@ func main() {
 	listUsers(client)
 	createUsers(client)
 	chatWithUsers(client)
+	spamGetUser(client)
 }

@@ -1,6 +1,8 @@
 
 # gRPC Streams
 * Send won't wait for anything. As long as there is buffer, send just sends all of it.
+* Limit number of streams with `grpc.MaxConcurrentStreams(X)` option
+* Interceptors - Only one interceptors, chaining can be done at the caller
 
 Generate server code
 ```
