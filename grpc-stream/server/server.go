@@ -6,11 +6,15 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/http"
 	"time"
 
 	"google.golang.org/grpc"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	pb "github.com/nethish/playground/grpc-stream/gen/api"
+	realprometheus "github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type userServiceServer struct {
@@ -104,7 +108,18 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer(grpc.MaxConcurrentStreams(10), grpc.UnaryInterceptor(LoggingInterceptor))
+	metrics := prometheus.NewServerMetrics()
+	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(
+		metrics.UnaryServerInterceptor(),
+		LoggingInterceptor,
+	),
+		grpc.MaxConcurrentStreams(10),
+	)
+
+	realprometheus.Register(metrics)
+
+	http.Handle("/metrics", promhttp.Handler())
+	go http.ListenAndServe(":8080", nil)
 	pb.RegisterUserServiceServer(grpcServer, &userServiceServer{})
 
 	log.Println("Server listening on :50051")
