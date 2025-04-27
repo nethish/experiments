@@ -34,3 +34,11 @@ mutation {
   }
 }
 ```
+
+# Something to read on
+* Why this guy is over GraphQL - https://bessey.dev/blog/2024/05/24/why-im-over-graphql/
+* Persisted Query is a solution for - caching, rate limiting, query control (but make it REST like?)
+  * You define and store the query as hash. You use the hash (or id) in the frontend to get the data
+
+# TODO
+* GraphQL Persisted Queries
