@@ -1,0 +1,25 @@
+# graphql/schema.graphqls
+
+type Person {
+  id: ID!
+  name: String!
+  age: Int!
+  email: String
+}
+
+type Query {
+  person(id: ID!): Person
+  people: [Person!]!
+
+  anotherPerson(id: ID!): AnotherPerson
+}
+
+type Mutation {
+  createPerson(name: String!, age: Int!, email: String): Person!
+  updatePerson(id: ID!, name: String, age: Int, email: String): Person!
+  deletePerson(id: ID!): Boolean!
+}
+
+type Subscription {
+  personCreated: Person!
+}
