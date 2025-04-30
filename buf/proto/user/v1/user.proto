@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package A.user.v1;
+package user.v1;
 
 option go_package = "github.com/nethish/experiments/buf/gen/proto/user/v1;userv1";
 
@@ -11,6 +11,7 @@ message User {
   string name = 3;    // Full name
   int32 age = 4;      // Age of the user
   bool is_active = 5; // Is the user active?
+  bool userId = 6;
 }
 
 // Request to create a new user.

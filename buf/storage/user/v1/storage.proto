@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package B.user.v1;
+package user.v1;
 
 option go_package = "github.com/nethish/experiments/buf/gen/storage/user/v1;userv1";
 
