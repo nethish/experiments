@@ -6,3 +6,9 @@
   * Alternatively you can use `buf.work.yaml` to define these workspaces and have `buf.yaml` inside each workspace (module specific)
 * `out=source_relative` will put the generated files in the same structure of protos and doesn't follow the `go_package` option
   * If you don't specify it will follow `go_package` strucutre
+
+
+## TODO
+* Understand linting and breaking
+
+
