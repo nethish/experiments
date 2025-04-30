@@ -20,6 +20,8 @@ func main() {
 	fmt.Println("Server is listening on", socketPath)
 
 	conn, err := ln.Accept()
+	fmt.Println("Remote addr:", conn.RemoteAddr()) // Won't print anything
+	fmt.Println("Local addr:", conn.LocalAddr())   // Print's the socket path
 	if err != nil {
 		panic(err)
 	}
