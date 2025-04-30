@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package A.user.v1;
+
+option go_package = "github.com/nethish/experiments/buf/gen/proto/user/v1;userv1";
+
+// User represents a single user account.
+message User {
+  string id = 1;      // Unique user ID
+  string email = 2;   // Email address
+  string name = 3;    // Full name
+  int32 age = 4;      // Age of the user
+  bool is_active = 5; // Is the user active?
+}
+
+// Request to create a new user.
+message CreateUserRequest {
+  string email = 1;
+  string name = 2;
+  int32 age = 3;
+}
+
+// Response after creating a new user.
+message CreateUserResponse { User user = 1; }
+
+// Service for managing users.
+service UserService {
+  // Create a new user.
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+}
