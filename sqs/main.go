@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -11,96 +14,120 @@ import (
 )
 
 func main() {
+	test()
 	ctx := context.Background()
 
-	// Load AWS config (uses environment, ~/.aws/config, IAM role, etc.)
+	// Load AWS config
 	cfg, err := config.LoadDefaultConfig(ctx)
+	cfg.Region = "ap-south-1"
 	if err != nil {
 		log.Fatalf("unable to load SDK config, %v", err)
 	}
 
-	// Create SQS client
 	client := sqs.NewFromConfig(cfg)
 
-	queueURL := "<SQS Queue>"
+	queueUrl := "https://sqs.ap-south-1.amazonaws.com/<account>/queue"
 
-	go rescueIndefinitely()
-	// Receive messages indefinitely but don't delete
-	for {
-		// Receive a message
-		output, err := client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
-			QueueUrl:            aws.String(queueURL),
-			MaxNumberOfMessages: 1,  // Read one message at a time
-			WaitTimeSeconds:     5,  // Long poll for 5 seconds
-			VisibilityTimeout:   30, // Hide the message for 30 sec after reading
-		})
-		if err != nil {
-			log.Fatalf("failed to receive message, %v", err)
-		}
+	var wg sync.WaitGroup
+	wg.Add(2) // one for producer, one for consumer
 
-		if len(output.Messages) == 0 {
-			fmt.Println("No messages received")
-		}
+	// Producer Goroutine
+	go func() {
+		defer wg.Done()
+		produceMessages(ctx, client, queueUrl)
+	}()
 
-		for _, message := range output.Messages {
-			fmt.Printf("Received message ID: %s\n", aws.ToString(message.MessageId))
-			fmt.Printf("Body: %s\n", aws.ToString(message.Body))
+	// Consumer Goroutine
+	go func() {
+		defer wg.Done()
+		consumeMessages(ctx, client, queueUrl)
+	}()
 
-			// NOTE: You should delete the message after processing
-			// (Optional) Delete the message after processing
-			// _, err := client.DeleteMessage(ctx, &sqs.DeleteMessageInput{
-			// 	QueueUrl:      aws.String(queueURL),
-			// 	ReceiptHandle: message.ReceiptHandle,
-			// })
-			// if err != nil {
-			// 	log.Printf("failed to delete message, %v", err)
-			// } else {
-			// 	fmt.Println("Message deleted successfully")
-			// }
-		}
+	wg.Wait()
+}
+
+func test() {
+	message := Message{
+		Id:   1,
+		Time: time.Now(),
 	}
-}
+	jsonBytes, _ := json.Marshal(message)
 
-func rescueIndefinitely() {
-	rescue()
-}
-
-func rescue() {
-	prefix := "[Rescuer] "
-	ctx := context.Background()
-
-	// Load AWS config (uses environment, ~/.aws/config, IAM role, etc.)
-	cfg, err := config.LoadDefaultConfig(ctx)
+	var mess *Message
+	err := json.Unmarshal(jsonBytes, mess)
 	if err != nil {
-		log.Fatalf("unable to load SDK config, %v", err)
+		fmt.Printf("error unmarshalling: %w\n", err)
 	}
 
-	// Create SQS client
-	client := sqs.NewFromConfig(cfg)
+	fmt.Printf("success unmarshalling: %s\n", string(jsonBytes))
+}
 
-	queueURL := "<DLQ>"
+type Message struct {
+	Id   int       `json:"id"`
+	Time time.Time `json:"time"`
+}
 
-	// Receive messages indefinitely but don't delete
-	for {
-		// Receive a message
-		output, err := client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
-			QueueUrl:            aws.String(queueURL),
-			MaxNumberOfMessages: 1,  // Read one message at a time
-			WaitTimeSeconds:     5,  // Long poll for 5 seconds
-			VisibilityTimeout:   30, // Hide the message for 30 sec after reading
+func produceMessages(ctx context.Context, client *sqs.Client, queueUrl string) {
+	for i := 0; i < 100; i++ {
+		message := Message{
+			Id:   i,
+			Time: time.Now(),
+		}
+
+		jsonBytes, _ := json.Marshal(message)
+
+		_, err := client.SendMessage(ctx, &sqs.SendMessageInput{
+			QueueUrl:    aws.String(queueUrl),
+			MessageBody: aws.String(string(jsonBytes)),
 		})
 		if err != nil {
-			log.Fatalf(prefix+"failed to receive message, %v", err)
+			log.Printf("failed to send message: %v", err)
+		} else {
+			log.Printf("Produced: %s", string(jsonBytes))
+		}
+
+		time.Sleep(1 * time.Second) // small delay between messages
+	}
+}
+
+func consumeMessages(ctx context.Context, client *sqs.Client, queueUrl string) {
+	for {
+		output, err := client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
+			QueueUrl:            aws.String(queueUrl),
+			MaxNumberOfMessages: 10,
+			WaitTimeSeconds:     10, // long polling
+		})
+		if err != nil {
+			log.Printf("failed to receive messages: %v", err)
+			continue
 		}
 
 		if len(output.Messages) == 0 {
-			fmt.Println(prefix + "No messages received")
+			log.Println("No messages received. Waiting...")
+			time.Sleep(3 * time.Second)
+			continue
 		}
 
 		for _, message := range output.Messages {
-			fmt.Printf(prefix+"Received message ID: %s\n", aws.ToString(message.MessageId))
-			fmt.Printf(prefix+"Body: %s\n", aws.ToString(message.Body))
+			var mess Message
+			err = json.Unmarshal([]byte(aws.ToString(message.Body)), &mess)
+			if err != nil {
+				fmt.Printf("error unmarshalling message: %s; Message: %s\n", err.Error(), aws.ToString(message.Body))
+				continue
+			}
 
+			fmt.Printf("Message Id: %s; Receive time: %v\n", mess.Id, time.Since(mess.Time))
+
+			// Delete the message after processing
+			_, err := client.DeleteMessage(ctx, &sqs.DeleteMessageInput{
+				QueueUrl:      aws.String(queueUrl),
+				ReceiptHandle: message.ReceiptHandle,
+			})
+			if err != nil {
+				log.Printf("failed to delete message: %v", err)
+			} else {
+				log.Printf("Deleted message ID: %s", aws.ToString(message.MessageId))
+			}
 		}
 	}
 }
