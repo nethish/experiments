@@ -1,0 +1,7 @@
+. {
+    errors
+    log
+    file db.example.com
+    forward . 8.8.8.8
+    cache 30
+}
