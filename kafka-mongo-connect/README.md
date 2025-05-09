@@ -4,3 +4,8 @@
 * Register the connector with `register-mongo-connector.sh`
 * Run the `consume.sh` file to see consumed events.
   * The topic name somehow is mongo.testdb.testcoll
+
+
+
+## Build SMT Plugin
+* `mvn clean package`
