@@ -8,7 +8,11 @@ curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json
     "collection": "testcoll",
     "topic.prefix": "mongo",
     "output.format.value": "json",
+    "output.format.key": "json",
     "transforms": "Encrypt",
-    "transforms.Encrypt.type": "net.cbhq.kafka.transform.encrypt.AppendATransform"
+    "transforms.Encrypt.type": "net.cbhq.kafka.transform.encrypt.EncryptField",
+
+    "output.json.formatter": "com.mongodb.kafka.connect.source.json.formatter.SimplifiedJson",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter"
   }
 }'
