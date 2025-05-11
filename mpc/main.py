@@ -1,31 +1,21 @@
-import sys
 from mpyc.runtime import mpc
 
 async def main():
+    secint = mpc.SecInt(16)
+
     await mpc.start()
 
-    secint = mpc.SecInt()
+    my_age = int(input('Enter your age: '))
+    our_ages = mpc.input(secint(my_age))
 
-    # Each party has a salary
-    inputs = [60000, 80000, 70000]
+    total_age = sum(our_ages)
+    max_age = mpc.max(our_ages)
+    m = len(mpc.parties)
+    above_avg = mpc.sum(age * m > total_age for age in our_ages)
 
-    if mpc.pid < len(inputs):
-        my_input = secint(inputs[mpc.pid])
-    else:
-        my_input = None
-
-    print(my_input)
-    # All parties participate in the input
-    # gather() makes it safe across all parties
-    secret_salary = await mpc.gather(mpc.input(my_input, senders=range(len(inputs))))
-
-    # secret_salary is a list with all secret inputs
-    total_salary = mpc.sum(secret_salary)
-    num_employees = len(inputs)
-    average_salary = total_salary / num_employees
-
-    avg = await mpc.output(average_salary)
-    print(f"[Party {mpc.pid}] Computed Average Salary: {avg}")
+    print('Average age:', await mpc.output(total_age) / m)
+    print('Maximum age:', await mpc.output(max_age))
+    print('Number of "elderly":', await mpc.output(above_avg))
 
     await mpc.shutdown()
 
