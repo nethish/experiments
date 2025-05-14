@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+	"reflect"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/linkedin/goavro/v2"
@@ -56,6 +57,7 @@ func main() {
 
 		// Decode
 		native, _, err := codec.NativeFromBinary(value[5:])
+		fmt.Println(reflect.TypeOf(native))
 		if err != nil {
 			fmt.Printf("Decode error: %v\n", err)
 			continue
