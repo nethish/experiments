@@ -6,73 +6,35 @@ package graph
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
+	"math/big"
 
 	"github.com/nethish/experiments/graphql/graph/model"
 )
 
-var (
-	Database map[string]*model.Person
-	id       = 0
-)
-
-// CreatePerson is the resolver for the createPerson field.
-func (r *mutationResolver) CreatePerson(ctx context.Context, name string, age int32, email *string) (*model.Person, error) {
-	id++
-	Database[string(id)] = &model.Person{
-		ID:    string(id),
-		Name:  name,
-		Age:   age,
-		Email: email,
+// CreateTodo is the resolver for the createTodo field.
+func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
+	randNumber, _ := rand.Int(rand.Reader, big.NewInt(100))
+	todo := &model.Todo{
+		Text:   input.Text,
+		ID:     fmt.Sprintf("T%d", randNumber),
+		UserID: input.UserID,
 	}
-
-	return Database[string(id)], nil
+	r.todos = append(r.todos, todo)
+	return todo, nil
 }
 
-// UpdatePerson is the resolver for the updatePerson field.
-func (r *mutationResolver) UpdatePerson(ctx context.Context, id string, name *string, age *int32, email *string) (*model.Person, error) {
-	Database[id] = &model.Person{
-		ID:    string(id),
-		Name:  *name,
-		Age:   *age,
-		Email: email,
-	}
-
-	return Database[id], nil
+// Todos is the resolver for the todos field.
+func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
+	fmt.Println("resolving todos")
+	return r.todos, nil
 }
 
-// DeletePerson is the resolver for the deletePerson field.
-func (r *mutationResolver) DeletePerson(ctx context.Context, id string) (bool, error) {
-	delete(Database, id)
-	return true, nil
-}
-
-// Person is the resolver for the person field.
-func (r *queryResolver) Person(ctx context.Context, id string) (*model.Person, error) {
-	return Database[id], nil
-}
-
-// People is the resolver for the people field.
-func (r *queryResolver) People(ctx context.Context) ([]*model.Person, error) {
-	persons := []*model.Person{}
-
-	for _, value := range Database {
-		persons = append(persons, value)
-	}
-
-	return persons, nil
-}
-
-// AnotherPerson is the resolver for the anotherPerson field.
-func (r *queryResolver) AnotherPerson(ctx context.Context, id string) (*model.AnotherPerson, error) {
-	panic(fmt.Errorf("not implemented: AnotherPerson - anotherPerson"))
-}
-
-// PersonCreated is the resolver for the personCreated field.
-func (r *subscriptionResolver) PersonCreated(ctx context.Context) (<-chan *model.Person, error) {
-	c := make(chan *model.Person)
-	c <- Database[string(id)]
-	return c, nil
+// User is the resolver for the user field.
+func (r *todoResolver) User(ctx context.Context, obj *model.Todo) (*model.User, error) {
+	fmt.Println("resolving user")
+	return &model.User{ID: obj.UserID, Name: "user " + obj.UserID}, nil
 }
 
 // Mutation returns MutationResolver implementation.
@@ -81,11 +43,11 @@ func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
-// Subscription returns SubscriptionResolver implementation.
-func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
+// Todo returns TodoResolver implementation.
+func (r *Resolver) Todo() TodoResolver { return &todoResolver{r} }
 
 type (
-	mutationResolver     struct{ *Resolver }
-	queryResolver        struct{ *Resolver }
-	subscriptionResolver struct{ *Resolver }
+	mutationResolver struct{ *Resolver }
+	queryResolver    struct{ *Resolver }
+	todoResolver     struct{ *Resolver }
 )

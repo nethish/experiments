@@ -1,25 +1,24 @@
-# graphql/schema.graphqls
+type Todo {
+  id: ID!
+  text: String!
+  done: Boolean!
+  user: User!
+}
 
-type Person {
+type User {
   id: ID!
   name: String!
-  age: Int!
-  email: String
 }
 
 type Query {
-  person(id: ID!): Person
-  people: [Person!]!
+  todos: [Todo!]!
+}
 
-  anotherPerson(id: ID!): AnotherPerson
+input NewTodo {
+  text: String!
+  userId: String!
 }
 
 type Mutation {
-  createPerson(name: String!, age: Int!, email: String): Person!
-  updatePerson(id: ID!, name: String, age: Int, email: String): Person!
-  deletePerson(id: ID!): Boolean!
-}
-
-type Subscription {
-  personCreated: Person!
+  createTodo(input: NewTodo!): Todo!
 }

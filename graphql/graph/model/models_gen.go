@@ -12,15 +12,15 @@ type AnotherPerson struct {
 type Mutation struct {
 }
 
-type Person struct {
-	ID    string  `json:"id"`
-	Name  string  `json:"name"`
-	Age   int32   `json:"age"`
-	Email *string `json:"email,omitempty"`
+type NewTodo struct {
+	Text   string `json:"text"`
+	UserID string `json:"userId"`
 }
 
 type Query struct {
 }
 
-type Subscription struct {
+type User struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
