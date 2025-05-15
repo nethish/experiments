@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+// EncryptField Transformer encrypts the fields specified
 public class EncryptField<R extends ConnectRecord<R>> implements Transformation<R> {
     private static final Logger log = LoggerFactory.getLogger(EncryptField.class);
     private static final ObjectMapper mapper = new ObjectMapper();
