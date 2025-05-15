@@ -43,3 +43,9 @@ mutation {
 * Why this guy is over GraphQL - https://bessey.dev/blog/2024/05/24/why-im-over-graphql/
 * Persisted Query is a solution for - caching, rate limiting, query control (but make it REST like?)
   * You define and store the query as hash. You use the hash (or id) in the frontend to get the data
+
+# GraphQL Federation
+* GraphQL also grows in complexity cuz it units all the services LOL
+* Federation means a unified Organization where internal sub org have their own influence. Likewise GraphQL Federation unifies all the micrographqls (like gateway for microservices)
+* It doesn't only do that. It can make all the subgraphs look like one. You can have Account in one subgraph and refer to it in another subgraph
+* See this repo for more examples - https://github.com/99designs/gqlgen/blob/master/_examples/federation
