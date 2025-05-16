@@ -5,5 +5,8 @@
 * Create Nodes with properties, create edges between nodes. The edges can have type so that it can have multiple relations
 
 
-# NO idea
+# No idea
 * Neo4j doesn't create or modify relationship when nodes get inserted or modified?!!!
+
+# TODO
+* Explore AWS Neptune
