@@ -47,6 +47,10 @@ func main() {
 	// Generate random users
 	users := generateRandomUsers(20)
 
+	// Ensure some users share attributes for demonstrating our relationships
+	// Create some shared attributes for more interesting data
+	createSharedAttributes(users)
+
 	// Create user nodes
 	userIds := createUserNodes(session, users)
 	fmt.Printf("Created %d user nodes\n", len(userIds))
@@ -55,6 +59,10 @@ func main() {
 	createRandomRelationships(session, userIds)
 	fmt.Println("Created random relationships between users")
 
+	// Create relationships based on shared attributes
+	createSharedAttributeRelationships(session)
+	fmt.Println("Created relationships for users with shared attributes (IP, phone, card)")
+
 	// Query first-degree relationships
 	fmt.Println("\n--- First-Degree Relationships ---")
 	queryFirstDegreeRelationships(session, userIds[0])
@@ -62,6 +70,10 @@ func main() {
 	// Query second-degree relationships
 	fmt.Println("\n--- Second-Degree Relationships ---")
 	querySecondDegreeRelationships(session, userIds[0])
+
+	// Query relationships by shared attributes
+	fmt.Println("\n--- Relationships By Shared Attributes ---")
+	queryRelationshipsBySharedAttributes(session)
 }
 
 func clearDatabase(session neo4j.Session) {
@@ -84,6 +96,26 @@ func generateRandomUsers(count int) []User {
 		}
 	}
 	return users
+}
+
+// Function to create some shared attributes among users to demonstrate relationships
+func createSharedAttributes(users []User) {
+	// Make some users share the same IP address
+	sharedIP := generateRandomIP()
+	users[1].IP = sharedIP
+	users[5].IP = sharedIP
+	users[12].IP = sharedIP
+
+	// Make some users share the same phone number
+	sharedPhone := generateRandomPhone()
+	users[3].Phone = sharedPhone
+	users[8].Phone = sharedPhone
+
+	// Make some users share the same card number
+	sharedCard := generateRandomCardNo()
+	users[2].CardNo = sharedCard
+	users[9].CardNo = sharedCard
+	users[15].CardNo = sharedCard
 }
 
 func generateRandomPhone() string {
@@ -124,8 +156,6 @@ func createUserNodes(session neo4j.Session, users []User) []int64 {
 		}
 
 		if result.Next() {
-			// jsonBytes, _ := json.MarshalIndent(result.Record(), "", "  ")
-			// fmt.Println(string(jsonBytes))
 			userIds = append(userIds, result.Record().Values[0].(int64))
 		}
 	}
@@ -161,6 +191,39 @@ func createRandomRelationships(session neo4j.Session, userIds []int64) {
 		if err != nil {
 			log.Printf("Error creating relationship: %v", err)
 		}
+	}
+}
+
+// Create relationships between users who share the same attributes
+func createSharedAttributeRelationships(session neo4j.Session) {
+	// Create SAME_IP relationships
+	_, err := session.Run(
+		"MATCH (a:User), (b:User) "+
+			"WHERE a.ip = b.ip AND a.name <> b.name "+
+			"CREATE (a)-[r:SAME_IP {shared: a.ip}]->(b)",
+		map[string]interface{}{})
+	if err != nil {
+		log.Printf("Error creating SAME_IP relationships: %v", err)
+	}
+
+	// Create SAME_PHONE relationships
+	_, err = session.Run(
+		"MATCH (a:User), (b:User) "+
+			"WHERE a.phone = b.phone AND a.name <> b.name "+
+			"CREATE (a)-[r:SAME_PHONE {shared: a.phone}]->(b)",
+		map[string]interface{}{})
+	if err != nil {
+		log.Printf("Error creating SAME_PHONE relationships: %v", err)
+	}
+
+	// Create SAME_CARD relationships
+	_, err = session.Run(
+		"MATCH (a:User), (b:User) "+
+			"WHERE a.cardNo = b.cardNo AND a.name <> b.name "+
+			"CREATE (a)-[r:SAME_CARD {shared: a.cardNo}]->(b)",
+		map[string]interface{}{})
+	if err != nil {
+		log.Printf("Error creating SAME_CARD relationships: %v", err)
 	}
 }
 
@@ -233,5 +296,77 @@ func querySecondDegreeRelationships(session neo4j.Session, userId int64) {
 
 	if count == 0 {
 		fmt.Println("  No second-degree connections found")
+	}
+}
+
+// Query relationships based on shared attributes
+func queryRelationshipsBySharedAttributes(session neo4j.Session) {
+	// Query users with same IP
+	fmt.Println("Users sharing the same IP address:")
+	result, err := session.Run(
+		"MATCH (a:User)-[r:SAME_IP]->(b:User) "+
+			"RETURN a.name as user1, b.name as user2, r.shared as sharedIP",
+		map[string]interface{}{})
+	if err != nil {
+		log.Printf("Error querying SAME_IP relationships: %v", err)
+	} else {
+		count := 0
+		for result.Next() {
+			record := result.Record()
+			user1 := record.Values[0].(string)
+			user2 := record.Values[1].(string)
+			sharedIP := record.Values[2].(string)
+			fmt.Printf("  %s and %s share IP: %s\n", user1, user2, sharedIP)
+			count++
+		}
+		if count == 0 {
+			fmt.Println("  No users sharing IP addresses found")
+		}
+	}
+
+	// Query users with same phone
+	fmt.Println("\nUsers sharing the same phone number:")
+	result, err = session.Run(
+		"MATCH (a:User)-[r:SAME_PHONE]->(b:User) "+
+			"RETURN a.name as user1, b.name as user2, r.shared as sharedPhone",
+		map[string]interface{}{})
+	if err != nil {
+		log.Printf("Error querying SAME_PHONE relationships: %v", err)
+	} else {
+		count := 0
+		for result.Next() {
+			record := result.Record()
+			user1 := record.Values[0].(string)
+			user2 := record.Values[1].(string)
+			sharedPhone := record.Values[2].(string)
+			fmt.Printf("  %s and %s share phone: %s\n", user1, user2, sharedPhone)
+			count++
+		}
+		if count == 0 {
+			fmt.Println("  No users sharing phone numbers found")
+		}
+	}
+
+	// Query users with same card
+	fmt.Println("\nUsers sharing the same card number:")
+	result, err = session.Run(
+		"MATCH (a:User)-[r:SAME_CARD]->(b:User) "+
+			"RETURN a.name as user1, b.name as user2, r.shared as sharedCard",
+		map[string]interface{}{})
+	if err != nil {
+		log.Printf("Error querying SAME_CARD relationships: %v", err)
+	} else {
+		count := 0
+		for result.Next() {
+			record := result.Record()
+			user1 := record.Values[0].(string)
+			user2 := record.Values[1].(string)
+			sharedCard := record.Values[2].(string)
+			fmt.Printf("  %s and %s share card: %s\n", user1, user2, sharedCard)
+			count++
+		}
+		if count == 0 {
+			fmt.Println("  No users sharing card numbers found")
+		}
 	}
 }
