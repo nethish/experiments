@@ -39,7 +39,7 @@ func main() {
 	fmt.Println("Lock acquired!")
 
 	// Simulate critical section
-	time.Sleep(5 * time.Second)
+	time.Sleep(20 * time.Second)
 
 	// Release the lock
 	if err := mutex.Unlock(context.TODO()); err != nil {
