@@ -49,3 +49,4 @@ mutation {
 * Federation means a unified Organization where internal sub org have their own influence. Likewise GraphQL Federation unifies all the micrographqls (like gateway for microservices)
 * It doesn't only do that. It can make all the subgraphs look like one. You can have Account in one subgraph and refer to it in another subgraph
 * See this repo for more examples - https://github.com/99designs/gqlgen/blob/master/_examples/federation
+* Federation directives: Use @key, @extends, @external, etc., to indicate relationships between services.
