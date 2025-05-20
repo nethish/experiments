@@ -1,55 +1,132 @@
 package main
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
+	"time"
 
 	"github.com/elastic/go-elasticsearch/v8"
 )
 
 func main() {
-	// Create ES client
 	es, err := elasticsearch.NewDefaultClient()
 	if err != nil {
 		log.Fatalf("Error creating the client: %s", err)
 	}
 
-	// Search for books with "Go" in the title
-	var buf bytes.Buffer
-	query := map[string]interface{}{
-		"query": map[string]interface{}{
-			"match": map[string]interface{}{
-				"title": "Go",
-			},
-		},
+	// 1. Index a document
+	doc := `{"title":"Go in Action","author":"William Kennedy","year":2016}`
+	res, err := es.Index("books", strings.NewReader(doc), es.Index.WithDocumentID("1"))
+	if err != nil {
+		log.Fatalf("Index error: %s", err)
 	}
-	if err := json.NewEncoder(&buf).Encode(query); err != nil {
-		log.Fatalf("Error encoding query: %s", err)
-	}
+	defer res.Body.Close()
+	fmt.Println("Indexed document:", res.Status())
 
-	res, err := es.Search(
-		es.Search.WithContext(context.Background()),
+	// 2. Search documents with match query
+	query := `{
+		"query": {
+			"match": { "title": "Go" }
+		}
+	}`
+	res, err = es.Search(
 		es.Search.WithIndex("books"),
-		es.Search.WithBody(&buf),
+		es.Search.WithBody(strings.NewReader(query)),
 		es.Search.WithPretty(),
 	)
 	if err != nil {
-		log.Fatalf("Error getting response: %s", err)
+		log.Fatalf("Search error: %s", err)
 	}
 	defer res.Body.Close()
 
-	// Decode and print results
 	var r map[string]interface{}
 	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
-		log.Fatalf("Error parsing response: %s", err)
+		log.Fatalf("Error parsing response body: %s", err)
 	}
-	fmt.Println(r)
+	fmt.Println("Search results:")
 	for _, hit := range r["hits"].(map[string]interface{})["hits"].([]interface{}) {
-		doc := hit.(map[string]interface{})
-		source := doc["_source"].(map[string]interface{})
-		fmt.Printf("Title: %s, Author: %s, Year: %v\n", source["title"], source["author"], source["year"])
+		src := hit.(map[string]interface{})["_source"]
+		b, _ := json.MarshalIndent(src, "", "  ")
+		fmt.Println(string(b))
 	}
+
+	// 3. Aggregation example (books per author)
+	//
+	// Why author.keyword?
+	// In Elasticsearch, a field like "author" that is mapped as a text type is analyzed — which means it's tokenized, lowercased, etc., for full-text search. However, you can’t use text fields in aggregations or exact matches.
+
+	// To support both full-text search and exact matching, Elasticsearch automatically creates a .keyword subfield for text fields.
+	aggQuery := `{
+		"size": 0,
+		"aggs": {
+			"books_per_author": {
+				"terms": {
+					"field": "author.keyword"
+				}
+			}
+		}
+	}`
+	res, err = es.Search(
+		es.Search.WithIndex("books"),
+		es.Search.WithBody(strings.NewReader(aggQuery)),
+	)
+	if err != nil {
+		log.Fatalf("Agg error: %s", err)
+	}
+	defer res.Body.Close()
+
+	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
+		log.Fatalf("Agg decode error: %s", err)
+	}
+	buckets := r["aggregations"].(map[string]interface{})["books_per_author"].(map[string]interface{})["buckets"].([]interface{})
+	fmt.Println("\nBooks per author:")
+	for _, b := range buckets {
+		bucket := b.(map[string]interface{})
+		fmt.Printf("%s: %v books\n", bucket["key"], bucket["doc_count"])
+	}
+
+	// 4. Bulk indexing
+	bulk := `
+{ "index":{ "_index":"books" }}
+{ "title":"Learning Go", "author":"Jon Bodner", "year":2021 }
+{ "index":{ "_index":"books" }}
+{ "title":"Go Systems Programming", "author":"Mihalis Tsoukalos", "year":2017 }
+`
+	res, err = es.Bulk(strings.NewReader(bulk))
+	if err != nil {
+		log.Fatalf("Bulk index error: %s", err)
+	}
+	fmt.Println("\nBulk indexing done:", res.Status())
+
+	// 5. Range query (books after 2015)
+	rangeQuery := `{
+		"query": {
+			"range": {
+				"year": { "gte": 2016 }
+			}
+		}
+	}`
+	res, err = es.Search(
+		es.Search.WithIndex("books"),
+		es.Search.WithBody(strings.NewReader(rangeQuery)),
+	)
+	if err != nil {
+		log.Fatalf("Range search error: %s", err)
+	}
+	defer res.Body.Close()
+
+	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
+		log.Fatalf("Range decode error: %s", err)
+	}
+	fmt.Println("\nBooks published after 2015:")
+	for _, hit := range r["hits"].(map[string]interface{})["hits"].([]interface{}) {
+		src := hit.(map[string]interface{})["_source"]
+		b, _ := json.MarshalIndent(src, "", "  ")
+		fmt.Println(string(b))
+	}
+
+	// Done
+	fmt.Println("\nAll done at", time.Now())
 }
