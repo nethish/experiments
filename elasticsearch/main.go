@@ -17,7 +17,7 @@ func main() {
 	}
 
 	// 1. Index a document
-	doc := `{"title":"Go in Action","author":"William Kennedy","year":2016}`
+	doc := `{"title":"Go in Action","author":"william kennedy","year":2016}`
 	res, err := es.Index("books", strings.NewReader(doc), es.Index.WithDocumentID("1"))
 	if err != nil {
 		log.Fatalf("Index error: %s", err)
@@ -125,6 +125,71 @@ func main() {
 		src := hit.(map[string]interface{})["_source"]
 		b, _ := json.MarshalIndent(src, "", "  ")
 		fmt.Println(string(b))
+	}
+
+	// 6. Index some time series documents with @timestamp and response_time
+	docs := []string{
+		`{"@timestamp":"2025-05-19T10:00:00Z","service":"api","response_time":150}`,
+		`{"@timestamp":"2025-05-19T11:00:00Z","service":"api","response_time":250}`,
+		`{"@timestamp":"2025-05-20T09:30:00Z","service":"api","response_time":300}`,
+		`{"@timestamp":"2025-05-20T14:00:00Z","service":"api","response_time":100}`,
+	}
+
+	for i, doc := range docs {
+		res, err := es.Index(
+			"metrics",
+			strings.NewReader(doc),
+			es.Index.WithDocumentID(fmt.Sprintf("%d", i+1)),
+			es.Index.WithRefresh("true"), // Make it visible for search immediately
+		)
+		if err != nil {
+			log.Fatalf("Index error: %s", err)
+		}
+		res.Body.Close()
+	}
+
+	// 7. Date histogram aggregation: Group by day, get avg response_time
+	query = `{
+		"size": 0,
+		"aggs": {
+			"daily_response_time": {
+				"date_histogram": {
+					"field": "@timestamp",
+					"calendar_interval": "day"
+				},
+				"aggs": {
+					"avg_response_time": {
+						"avg": { "field": "response_time" }
+					}
+				}
+			}
+		}
+	}`
+
+	res, err = es.Search(
+		es.Search.WithIndex("metrics"),
+		es.Search.WithBody(strings.NewReader(query)),
+		es.Search.WithTrackTotalHits(true),
+	)
+	if err != nil {
+		log.Fatalf("Search error: %s", err)
+	}
+	defer res.Body.Close()
+
+	r = make(map[string]any)
+	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
+		log.Fatalf("Decode error: %s", err)
+	}
+
+	// Parse aggregation buckets
+	buckets = r["aggregations"].(map[string]interface{})["daily_response_time"].(map[string]interface{})["buckets"].([]interface{})
+
+	fmt.Println("Daily average response times:")
+	for _, b := range buckets {
+		bucket := b.(map[string]interface{})
+		date := bucket["key_as_string"]
+		avgResp := bucket["avg_response_time"].(map[string]interface{})["value"]
+		fmt.Printf("%s => %.2f ms\n", date, avgResp)
 	}
 
 	// Done
