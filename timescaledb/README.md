@@ -7,3 +7,4 @@
 * Should be fun exploring how it partitions data and queries.
 * Algorithms used under the hood
 * What kind of indexes it builds and maintains
+* Compare with plain postgres for performance comparison and why Timescale excels?
