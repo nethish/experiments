@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -192,6 +194,89 @@ func main() {
 		fmt.Printf("%s => %.2f ms\n", date, avgResp)
 	}
 
+	// 8 Fuzzy
+	fuzzy()
+
 	// Done
 	fmt.Println("\nAll done at", time.Now())
+}
+
+type User struct {
+	Name string `json:"name"`
+	Age  int    `json:"age"`
+}
+
+func fuzzy() {
+	es, err := elasticsearch.NewDefaultClient()
+	if err != nil {
+		log.Fatalf("Error creating Elasticsearch client: %s", err)
+	}
+
+	index := "users"
+
+	// 1. Create the index (optional, safe to skip if already created)
+	es.Indices.Create(index)
+
+	// 2. Index a document
+	users := []User{
+		{"Nethish", 30},
+		{"Nathish", 28},
+		{"Neethush", 31},
+		{"Nitish", 27},
+	}
+
+	for i, u := range users {
+		data, _ := json.Marshal(u)
+		_, err := es.Index(index,
+			bytes.NewReader(data),
+			es.Index.WithDocumentID(fmt.Sprint(i+1)),
+			es.Index.WithRefresh("true"),
+		)
+		if err != nil {
+			log.Fatalf("Failed to index doc %d: %v", i, err)
+		}
+	}
+
+	// 3. Perform a fuzzy match query
+	var buf bytes.Buffer
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"match": map[string]interface{}{
+				"name": map[string]interface{}{
+					"query":     "Nethih", // Typo intended
+					"fuzziness": "AUTO",
+				},
+			},
+		},
+	}
+	if err := json.NewEncoder(&buf).Encode(query); err != nil {
+		log.Fatalf("Error encoding query: %s", err)
+	}
+
+	res, err := es.Search(
+		es.Search.WithContext(context.Background()),
+		es.Search.WithIndex(index),
+		es.Search.WithBody(&buf),
+		es.Search.WithTrackTotalHits(true),
+		es.Search.WithPretty(),
+	)
+	if err != nil {
+		log.Fatalf("Search error: %s", err)
+	}
+	defer res.Body.Close()
+
+	var r map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
+		log.Fatalf("Error parsing the response: %s", err)
+	}
+
+	// 4. Print results
+	fmt.Printf("Fuzzy Search Results:\n")
+	jsonBytes, _ := json.MarshalIndent(r, "", " ")
+	fmt.Println(string(jsonBytes))
+	for _, hit := range r["hits"].(map[string]interface{})["hits"].([]interface{}) {
+		doc := hit.(map[string]interface{})["_source"]
+		j, _ := json.MarshalIndent(doc, "", "  ")
+		fmt.Println(string(j))
+	}
 }
