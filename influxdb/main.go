@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -21,16 +22,23 @@ func main() {
 
 	writeAPI := client.WriteAPIBlocking(org, bucket)
 
-	// 1. Write a point
-	p := influxdb2.NewPoint("temperature",
-		map[string]string{"location": "office"},
-		map[string]interface{}{"value": 24.5},
-		time.Now())
-	err := writeAPI.WritePoint(context.Background(), p)
-	if err != nil {
-		panic(err)
+	start := time.Now()
+	for i := range 100000 {
+		// 1. Write a point
+		p := influxdb2.NewPoint("temperature",
+			map[string]string{"location": "office"},
+			map[string]interface{}{"value": rand.Float32() * 100},
+			time.Now())
+		err := writeAPI.WritePoint(context.Background(), p)
+		if err != nil {
+			panic(err)
+		}
+
+		if i%10000 == 0 {
+			fmt.Println("Wrote 10000 records.")
+		}
 	}
-	fmt.Println("✅ Data written")
+	fmt.Println("✅ Data written in", time.Since(start))
 
 	// 2. Query data
 	query := `from(bucket:"demo-bucket")
