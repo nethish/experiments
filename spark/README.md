@@ -26,3 +26,22 @@
 # TODO
 * I could not make spark read the `data.csv` across workers
 * After that work with parquet format to see how fast it is?
+
+# FAQ
+## What Happens When a Worker Fails?
+* Task Fails:
+  * Tasks running on that worker crash or stop responding.
+  * Spark notices the failure (via heartbeat timeout or task error).
+* Task is Rescheduled:
+  * The Spark Driver detects the failed task.
+  * It reschedules the task on a different active executor (another worker).
+  * The data required for the task is fetched again if needed.
+* No Data Loss (usually):
+  * If the data is in persistent storage (e.g., HDFS, S3, local disk), Spark can re-read it.
+  * If you're using cached data that was only in memory on the failed worker, Spark may recompute it using lineage info.
+
+## Other aspects
+* RDD Lineage. Spark knows how to construct RDDs from other RDDs (parents). It just reapplies the transformation
+* Retries Task execution in another executor if node goes down
+* Persistence to storage
+* Checkpointing - Store intermediate RDDs reliably in HDFS to avoid full recompute
