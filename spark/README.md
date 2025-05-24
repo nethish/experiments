@@ -1,6 +1,7 @@
 # Sparkkkk
 * Ivy is the dependency manager for Spark (LOL how many for Java?)
   * Hence you have to set the ivy2 cache directory in env var
+* Lazy Evaluation, Transformations vs Actions, DataFrame and Dataset API, RDD
 * Once the cluster is up, run the `submit_job.py` to submit a job
 * The jobs are placed inside the spark-apps folder. Each python file is like a job that you can submit.
 * This experiment demonstrates a spark cluster running locally in standalone mode.
