@@ -24,3 +24,4 @@
 
 # TODO
 * I could not make spark read the `data.csv` across workers
+* After that work with parquet format to see how fast it is?
