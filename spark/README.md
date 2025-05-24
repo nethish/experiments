@@ -13,10 +13,10 @@
     * `df.count()` triggers one job
   * Stage = A Set of Transformations that can run without shuffles
     * Spark breaks the job into stages based on shuffle boundaries.
-    | 💡 Example:
-    | df.map(...).groupBy(...).agg(...)
-    | → First stage: map
-    | → Second stage: groupBy + agg (requires a shuffle)
+    > 💡 Example:
+    > df.map(...).groupBy(...).agg(...)
+    > → First stage: map
+    > → Second stage: groupBy + agg (requires a shuffle)
   * Task = smallest unit of work; runs on a single executor thread
     * Each stage is divided into tasks, one per partition.
     * All tasks in the same stage run in parallel across executors.
