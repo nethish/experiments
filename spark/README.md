@@ -20,3 +20,7 @@
   * Task = smallest unit of work; runs on a single executor thread
     * Each stage is divided into tasks, one per partition.
     * All tasks in the same stage run in parallel across executors.
+
+
+# TODO
+* I could not make spark read the `data.csv` across workers
