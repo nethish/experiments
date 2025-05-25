@@ -1,0 +1,42 @@
+version: "3"
+
+services:
+  coordinator:
+    image: trinodb/trino:latest
+    container_name: trino-coordinator
+    volumes:
+      - ./config/coordinator:/etc/trino
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ID=coordinator
+    networks:
+      - trino-network
+
+  worker1:
+    image: trinodb/trino:latest
+    container_name: trino-worker1
+    depends_on:
+      - coordinator
+    volumes:
+      - ./config/worker:/etc/trino
+    environment:
+      - NODE_ID=worker1
+    networks:
+      - trino-network
+
+  worker2:
+    image: trinodb/trino:latest
+    container_name: trino-worker2
+    depends_on:
+      - coordinator
+    volumes:
+      - ./config/worker:/etc/trino
+    environment:
+      - NODE_ID=worker2
+    networks:
+      - trino-network
+
+networks:
+  trino-network:
+    driver: bridge

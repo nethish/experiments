@@ -13,8 +13,8 @@
   * Create a network
 ```
     hadoop-net:
-    external:
-      name: hadoop_hadoop-net
+      external:
+        name: hadoop_hadoop-net
 ```
   * Add the `hadoop-net` to all the services 
   * Start the services
