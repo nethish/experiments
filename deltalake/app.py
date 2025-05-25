@@ -57,4 +57,9 @@ print("=== Time travel to version 0:")
 old_df = spark.read.format("delta").option("versionAsOf", 0).load(path)
 old_df.show()
 
+# Show History
+print("=== Show all history:")
+dt = DeltaTable.forPath(spark, path)
+dt.history().show(truncate=False)
+
 spark.stop()
