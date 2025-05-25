@@ -28,6 +28,9 @@
     * All tasks in the same stage run in parallel across executors.
 * Warehouse directory is where spark manages data by default
 
+## Hadoop + Spark 
+* See hadoop readme for an example
+
 # FAQ
 ## What Happens When a Worker Fails?
 * Task Fails:
