@@ -1,4 +1,4 @@
-# Sparkkkk
+# Bitnami Spark (Deprecated)
 * Ivy is the dependency manager for Spark (LOL how many for Java?)
   * Hence you have to set the ivy2 cache directory in env var
 * Lazy Evaluation, Transformations vs Actions, DataFrame and Dataset API, RDD

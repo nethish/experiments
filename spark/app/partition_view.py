@@ -1,11 +1,10 @@
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import spark_partition_id, sum
 
 spark = SparkSession.builder.appName("DistributedCSVReader").getOrCreate()
 
 csv_path = "/app/data.csv"
 df = spark.read.csv(csv_path, header=True, inferSchema=True).repartition(3)
-
-from pyspark.sql.functions import spark_partition_id, sum
 
 # Add partition ID for inspection
 df_with_pid = df.withColumn("partition_id", spark_partition_id())
