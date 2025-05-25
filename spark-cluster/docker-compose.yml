@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  spark-master:
+    image: apache/spark:3.4.1
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+    command: >
+      bash -c "/opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+      --host spark-master"
+    ports:
+      - "7077:7077"      # Spark master
+      - "8080:8080"      # Web UI
+    volumes:
+      - ./app:/app
+    networks:
+      - spark-network
+
+  spark-worker-1:
+    image: apache/spark:3.4.1
+    container_name: spark-worker-1
+    environment:
+      - SPARK_MODE=worker
+    command: >
+      bash -c "/opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
+      spark://spark-master:7077"
+    depends_on:
+      - spark-master
+    volumes:
+      - ./app:/app
+    networks:
+      - spark-network
+
+  spark-worker-2:
+    image: apache/spark:3.4.1
+    container_name: spark-worker-2
+    environment:
+      - SPARK_MODE=worker
+    command: >
+      bash -c "/opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
+      spark://spark-master:7077"
+    depends_on:
+      - spark-master
+    volumes:
+      - ./app:/app
+    networks:
+      - spark-network
+
+networks:
+  spark-network:
+    driver: bridge
+
