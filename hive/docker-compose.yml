@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  hive-metastore-db:
+    image: postgres:13
+    container_name: hive-metastore-db
+    environment:
+      POSTGRES_DB: metastore
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hive123
+    volumes:
+      - ./hive-metastore-data:/var/lib/postgresql/data
+    networks:
+      - hive-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hive -d metastore"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  hive-metastore:
+    image: apache/hive:4.0.0
+    container_name: hive-metastore
+    depends_on:
+      hive-metastore-db:
+        condition: service_healthy
+    environment:
+      SERVICE_NAME: metastore
+      HIVE_CUSTOM_CONF_DIR: /opt/hive/conf
+    volumes:
+      - ./hive-conf:/opt/hive/conf
+    networks:
+      - hive-net
+      - hadoop_hadoop-net
+    ports:
+      - "9083:9083"
+    command: >
+      bash -c "
+        if [ ! -f /opt/hive/conf/.schema_initialized ]; then
+          echo 'Initializing schema...'
+          /opt/hive/bin/schematool -dbType postgres -initSchema
+          touch /opt/hive/conf/.schema_initialized
+        fi
+        /opt/hive/bin/hive --service metastore
+      "
+
+  hiveserver2:
+    image: apache/hive:4.0.0
+    container_name: hiveserver2
+    depends_on:
+      - hive-metastore
+    environment:
+      SERVICE_NAME: hiveserver2
+      HIVE_CUSTOM_CONF_DIR: /opt/hive/conf
+      HADOOP_USER_NAME: root
+    volumes:
+      - ./hive-conf:/opt/hive/conf
+    networks:
+      - hive-net
+      - hadoop_hadoop-net
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+    restart: unless-stopped
+    command: >
+      bash -c "
+        # Kill any existing hiveserver2 processes
+        pkill -f hiveserver2 || true
+        sleep 5
+        # Create necessary directories
+        mkdir -p /home/hive/.beeline
+        chown -R hive:hive /home/hive || true
+        # Start HiveServer2
+        echo 'Starting HiveServer2...'
+        /opt/hive/bin/hive --service hiveserver2 --hiveconf hive.root.logger=INFO,console
+      "
+
+networks:
+  hive-net:
+    driver: bridge
+  hadoop_hadoop-net:
+    external: true
