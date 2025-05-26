@@ -26,14 +26,22 @@ def show_footer(file_path):
             print(f"      Encodings: {column.encodings}")
             print(f"      Compression: {column.compression}")
             print(f"      Data page offset: {column.data_page_offset}")
+            print(f"      Dictionary page offset: {column.dictionary_page_offset}")
             print(f"      Total compressed size: {column.total_compressed_size}")
+
+            stats = column.statistics
+            if stats is not None:
+                print(f"      Stats:")
+                print(f"        Null count: {stats.null_count}")
+                print(f"        Distinct count: {stats.distinct_count}")
+                print(f"        Min: {stats.min}")
+                print(f"        Max: {stats.max}")
+            else:
+                print(f"      Stats: None")
+
         print()
         break
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python show_parquet_footer.py <file.parquet>")
-        sys.exit(1)
-
-    show_footer(sys.argv[1])
+    show_footer("./data.parquet")

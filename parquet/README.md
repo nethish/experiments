@@ -2,6 +2,10 @@
 * Parquet stores metadata about row group in it's footer
 * The last 8 bytes tells where the footer starts
 * Distributed processing can leverage this metadata and request only the data needed
+* Depending on the lib - Each row group might have column chunks. Each column chunk have many pages
+  * Data pages
+  * Dictionary pages (dictionary encoding)
+  * Index pages
 
 
 ## Example metadata
