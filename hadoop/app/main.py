@@ -1,6 +1,5 @@
 from hdfs import InsecureClient
 from concurrent.futures import ThreadPoolExecutor
-import math
 
 # Configuration
 HDFS_URL = "http://namenode:9870"  # Replace with your actual namenode URL

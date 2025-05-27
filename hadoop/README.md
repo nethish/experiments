@@ -23,6 +23,6 @@
 ```
   * Add the `hadoop-net` to all the services 
   * Start the services
-  * Use the `app/hadoop/main.py` to run the job
+  * Use the `app/hadoop/main.py` to run the job using `spark-submit`
   * Before that, copy the data.parquet to hadoop file system
   * It's slower than FS lookup. You probably need hundreds of GBs to Terabytes of data to see real performance
