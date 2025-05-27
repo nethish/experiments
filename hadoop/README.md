@@ -7,6 +7,11 @@
 * Look at `commands.sh` to understand how to put file in the file system
 * View the UI at `http://localhost:9870/`
 
+## hdfs cli
+* Download hdfs `brew install hadoop`
+* Export the `env.sh`
+* `hdfs --config ./config dfs -ls /`
+
 
 ## Connect to Spark Cluster
 * Make the below changes to spark docker-compose
