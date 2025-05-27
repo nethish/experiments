@@ -1,5 +1,4 @@
 import pyarrow.parquet as pq
-import sys
 
 
 def show_footer(file_path):
