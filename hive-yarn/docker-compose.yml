@@ -138,7 +138,8 @@ services:
       HIVE_CORE_CONF_hive_metastore_warehouse_dir: "hdfs://namenode:9000/user/hive/warehouse"
       HIVE_CORE_CONF_hive_server2_thrift_port: "10000"
       CORE_CONF_fs_defaultFS: hdfs://namenode:9000
-      HIVE_CONF_hive_execution_engine: tez # (Already there)
+      YARN_CONF_yarn_resourcemanager_hostname: resourcemanager
+      MAPRED_CONF_mapreduce_framework_name: yarn
     ports:
       - "10000:10000"
       - "10002:10002"
@@ -151,6 +152,8 @@ services:
       - resourcemanager # <--- ADDED
     networks:
       - hadoop-net
+    env_file:
+      - ./hadoop.env
 
 networks:
   hadoop-net:
