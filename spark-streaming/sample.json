@@ -1,1 +1,11 @@
+app
 {"time": "2025-01-01T00:00:00","code": "update","int": 1,"float": 1.2}
+
+
+watermark
+{"userId": "user1", "action": "click", "value": 10, "eventTime": "2025-01-01T00:00:00Z"}
+{"userId": "user1", "action": "click", "value": 10, "eventTime": "2025-01-01T00:01:00Z"}
+{"userId": "user1", "action": "click", "value": 10, "eventTime": "2025-01-01T00:01:59Z"}
+{"userId": "user1", "action": "click", "value": 10, "eventTime": "2025-01-01T00:02:00Z"}
+{"userId": "user1", "action": "click", "value": 10, "eventTime": "2025-01-01T00:00:00Z"}
+
