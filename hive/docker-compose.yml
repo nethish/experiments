@@ -1,82 +1,153 @@
 version: '3.8'
 
 services:
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    restart: always
+    ports:
+      - 9870:9870    # NameNode Web UI
+      - 9000:9000    # HDFS API
+      - 8020:8020    # Namenode IPC port (important)
+    volumes:
+      - ./hadoop_namenode:/hadoop/dfs/name
+    environment:
+      CLUSTER_NAME: test
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+    env_file:
+      - ./hadoop.env
+    networks:
+      - hadoop-net
+
+  datanode1:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode1
+    restart: always
+    ports:
+      - 9864:9864    # DataNode Web UI
+      - 50075:50075  # DataNode HTTP
+    volumes:
+      - ./hadoop_datanode1:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: namenode:9870
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      - namenode
+    networks:
+      - hadoop-net
+
+  datanode2:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode2
+    restart: always
+    ports:
+      - 9865:9864    # DataNode Web UI for datanode2
+      - 50076:50075  # DataNode HTTP
+    volumes:
+      - ./hadoop_datanode2:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: namenode:9870
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      - namenode
+    networks:
+      - hadoop-net
+
+  # Hive Metastore Database (PostgreSQL)
   hive-metastore-db:
     image: postgres:13
     container_name: hive-metastore-db
-    environment:
-      POSTGRES_DB: metastore
-      POSTGRES_USER: hive
-      POSTGRES_PASSWORD: hive123
-    volumes:
-      - ./hive-metastore-data:/var/lib/postgresql/data
-    networks:
-      - hive-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hive -d metastore"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  hive-metastore:
-    image: apache/hive:4.0.0
-    container_name: hive-metastore
-    depends_on:
-      hive-metastore-db:
-        condition: service_healthy
-    environment:
-      SERVICE_NAME: metastore
-      HIVE_CUSTOM_CONF_DIR: /opt/hive/conf
-    volumes:
-      - ./hive-conf:/opt/hive/conf
-    networks:
-      - hive-net
-      - hadoop_hadoop-net
+    restart: always
     ports:
-      - "9083:9083"
-    command: >
-      bash -c "
-        if [ ! -f /opt/hive/conf/.schema_initialized ]; then
-          echo 'Initializing schema...'
-          /opt/hive/bin/schematool -dbType postgres -initSchema
-          touch /opt/hive/conf/.schema_initialized
-        fi
-        /opt/hive/bin/hive --service metastore
-      "
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: hive
+      POSTGRES_USER: hiveuser
+      POSTGRES_PASSWORD: hivepassword
+    volumes:
+      - ./hive_metastore_db:/var/lib/postgresql/data
+    networks:
+      - hadoop-net
 
-  hiveserver2:
-    image: apache/hive:4.0.0
-    container_name: hiveserver2
+  # Hive Metastore Service
+  hive-metastore:
+    image: bde2020/hive:2.3.2-postgresql-metastore # Changed image tag here
+    container_name: hive-metastore
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: hive-metastore-db:5432
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-metastore-db:5432/hive"
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionDriverName: "org.postgresql.Driver"
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionUserName: "hiveuser"
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionPassword: "hivepassword"
+      HIVE_CORE_CONF_hive_metastore_warehouse_dir: "hdfs://namenode:9000/user/hive/warehouse"
+      HIVE_CORE_CONF_datanucleus_schema_autoCreateAll: "true"
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000 # ADD THIS LINE!
+      SERVICE: metastore # ADDED THIS LINE!
+    ports:
+      - "9083:9083" # Metastore Thrift port
+    volumes:
+      - ./hive_metastore_data:/opt/hive/data
+      - ./hive-site.xml:/opt/hive/conf/hive-site.xml # Add this line
+    depends_on:
+      - hive-metastore-db
+      - namenode
+    networks:
+      - hadoop-net
+    command: ["/opt/hive/bin/hive", "--service", "metastore"] # ADD THIS LINE!
+
+  # Hive Server 2
+  hiveserver:
+    image: bde2020/hive:2.3.2-postgresql-metastore # Changed image tag here
+    container_name: hiveserver
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: hive-metastore:9083
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-metastore-db:5432/hive"
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionDriverName: "org.postgresql.Driver"
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionUserName: "hiveuser"
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionPassword: "hivepassword"
+      HIVE_CORE_CONF_hive_metastore_warehouse_dir: "hdfs://namenode:9000/user/hive/warehouse"
+      HIVE_CORE_CONF_hive_server2_thrift_port: "10000"
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000 # ADD THIS LINE!
+    ports:
+      - "10000:10000" # HiveServer2 Thrift port
+      - "10002:10002" # HiveServer2 Web UI
+    volumes:
+      - ./hive_server_data:/opt/hive/data
+      - ./hive-site.xml:/opt/hive/conf/hive-site.xml # Add this line
     depends_on:
       - hive-metastore
-    environment:
-      SERVICE_NAME: hiveserver2
-      HIVE_CUSTOM_CONF_DIR: /opt/hive/conf
-      HADOOP_USER_NAME: root
-    volumes:
-      - ./hive-conf:/opt/hive/conf
+      - namenode
     networks:
-      - hive-net
-      - hadoop_hadoop-net
-    ports:
-      - "10000:10000"
-      - "10002:10002"
-    restart: unless-stopped
-    command: >
-      bash -c "
-        # Kill any existing hiveserver2 processes
-        pkill -f hiveserver2 || true
-        sleep 5
-        # Create necessary directories
-        mkdir -p /home/hive/.beeline
-        chown -R hive:hive /home/hive || true
-        # Start HiveServer2
-        echo 'Starting HiveServer2...'
-        /opt/hive/bin/hive --service hiveserver2 --hiveconf hive.root.logger=INFO,console
-      "
+      - hadoop-net
+
+  # Hive Client (for interactive use)
+  hive-client:
+    image: bde2020/hive:2.3.2-postgresql-metastore # Changed image tag here
+    container_name: hive-client
+    restart: 'no'
+    environment:
+      SERVICE_PRECONDITION: hiveserver:10000
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-metastore-db:5432/hive"
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionDriverName: "org.postgresql.Driver"
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionUserName: "hiveuser"
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionPassword: "hivepassword"
+      HIVE_CORE_CONF_hive_metastore_warehouse_dir: "hdfs://namenode:9000/user/hive/warehouse"
+      HIVE_CLI_OPT_hive_metastore_uris: "thrift://hive-metastore:9083"
+      HIVE_CLI_OPT_hive_server2_thrift_uris: "thrift://hiveserver:10000"
+    volumes:
+      - ./hive_client_data:/opt/hive/data
+      - ./hive-site.xml:/opt/hive/conf/hive-site.xml # Add this line
+    depends_on:
+      - hiveserver
+    networks:
+      - hadoop-net
 
 networks:
-  hive-net:
+  hadoop-net:
     driver: bridge
-  hadoop_hadoop-net:
-    external: true
