@@ -1,0 +1,5 @@
+hadoop_datanode1
+hadoop_datanode2
+hadoop_namenode
+hive_metastore_db
+hive_server_data
