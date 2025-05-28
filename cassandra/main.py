@@ -5,10 +5,7 @@ Demonstrates inserting and retrieving data from Cassandra cluster
 """
 
 from cassandra.cluster import Cluster
-from cassandra.auth import PlainTextAuthProvider
-from cassandra.policies import DCAwareRoundRobinPolicy
 import uuid
-import json
 from datetime import datetime
 import time
 
@@ -18,7 +15,7 @@ class CassandraClient:
         # Connection configuration
         self.hosts = ["localhost"]  # Docker host
         self.ports = [9042, 9043, 9044, 9045]  # All node ports
-        self.keyspace = "demo_keyspace"
+        self.keyspace = "keyspace2"
         self.cluster = None
         self.session = None
 
