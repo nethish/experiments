@@ -126,28 +126,6 @@ services:
     networks:
       - hadoop-net
 
-  # Hive Client (for interactive use)
-  hive-client:
-    image: bde2020/hive:2.3.2-postgresql-metastore # Changed image tag here
-    container_name: hive-client
-    restart: 'no'
-    environment:
-      SERVICE_PRECONDITION: hiveserver:10000
-      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-metastore-db:5432/hive"
-      HIVE_CORE_CONF_javax_jdo_option_ConnectionDriverName: "org.postgresql.Driver"
-      HIVE_CORE_CONF_javax_jdo_option_ConnectionUserName: "hiveuser"
-      HIVE_CORE_CONF_javax_jdo_option_ConnectionPassword: "hivepassword"
-      HIVE_CORE_CONF_hive_metastore_warehouse_dir: "hdfs://namenode:9000/user/hive/warehouse"
-      HIVE_CLI_OPT_hive_metastore_uris: "thrift://hive-metastore:9083"
-      HIVE_CLI_OPT_hive_server2_thrift_uris: "thrift://hiveserver:10000"
-    volumes:
-      - ./hive_client_data:/opt/hive/data
-      - ./hive-site.xml:/opt/hive/conf/hive-site.xml # Add this line
-    depends_on:
-      - hiveserver
-    networks:
-      - hadoop-net
-
 networks:
   hadoop-net:
     driver: bridge
