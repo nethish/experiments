@@ -1,5 +1,7 @@
 # Hive
 * In addition to the hadoop cluster, postgres (for metastore), metastore server itself, and hiveserver are the three other components of Hive
+* If you have hdfs cli, use the `hdfs --config ./config dfs -ls /files/` to directly run without going into the container
+* Hive is a warehouse engine that can talk to hadoop. Read files, and get tasks done by splitting the SQL into tasks
 
 ## Hiveserver2
 * First thing, you can connect to this server using DBeaver

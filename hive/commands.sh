@@ -37,4 +37,13 @@ LOAD DATA LOCAL INPATH '/opt/hive/data/kv1.txt' OVERWRITE INTO TABLE users;
 
 SELECT * FROM users;
 
-
+# PARQUET
+```SQL
+CREATE EXTERNAL TABLE IF NOT EXISTS external_products_parquet (
+  id INT,
+  value INT,          -- Assuming 'value' is your second column, not 'name' or 'category'
+  category STRING     -- Assuming 'category' is your third column
+)
+STORED AS PARQUET
+LOCATION 'hdfs://namenode:9000/files/';
+```
