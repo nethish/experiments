@@ -46,4 +46,8 @@ CREATE EXTERNAL TABLE IF NOT EXISTS external_products_parquet (
 )
 STORED AS PARQUET
 LOCATION 'hdfs://namenode:9000/files/';
+
+
+
+SELECT COUNT(1) FROM external_products_parquet;
 ```
