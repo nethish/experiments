@@ -75,7 +75,7 @@ CREATE TABLE messages (
 ```
 
 
-## Why is it Column Family?
+## Why is it Column Family or Wide column?
 * Each row can have different columns. 
 * The partition key is mandatory
 * The columns can be ommitted during inserts -- Flexible columns so column family. Inherited from Google BigTable where it's row -> column1:value1 column2:value2 groups
