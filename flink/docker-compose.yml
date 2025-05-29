@@ -26,8 +26,8 @@ services:
     environment:
       - JOB_MANAGER_RPC_ADDRESS=jobmanager
     volumes:
-      - ./lib/flink-connector-kafka-1.17.0.jar:/opt/flink/lib/flink-connector-kafka-1.17.0.jar
-      - ./lib/kafka-clients-2.8.0.jar:/opt/flink/lib/kafka-clients-2.8.0.jar
+      - ./library/flink-connector-kafka-1.17.0.jar:/opt/flink/lib/flink-connector-kafka-1.17.0.jar
+      - ./library/kafka-clients-2.8.0.jar:/opt/flink/lib/kafka-clients-2.8.0.jar
       - ./app:/app
 
   taskmanager:
@@ -39,18 +39,7 @@ services:
       - JOB_MANAGER_RPC_ADDRESS=jobmanager
       - TASK_MANAGER_NUMBER_OF_TASK_SLOTS=2
     volumes:
-      - ./lib/flink-connector-kafka-1.17.0.jar:/opt/flink/lib/flink-connector-kafka-1.17.0.jar
-      - ./lib/kafka-clients-2.8.0.jar:/opt/flink/lib/kafka-clients-2.8.0.jar
+      - ./library/flink-connector-kafka-1.17.0.jar:/opt/flink/lib/flink-connector-kafka-1.17.0.jar
+      - ./library/kafka-clients-2.8.0.jar:/opt/flink/lib/kafka-clients-2.8.0.jar
       - ./app:/app
 
-  # client:
-  #   image: flink:1.17
-  #   depends_on:
-  #     - jobmanager
-  #     - kafka
-  #   entrypoint: /bin/bash
-  #   stdin_open: true
-  #   tty: true
-  #   volumes:
-  #     - ./app:/app
-  #     - ./lib/flink-connector-kafka-1.17.0.jar:/opt/flink/lib/flink-connector-kafka-1.17.0.jar
