@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+
+  jobmanager:
+    image: flink:1.17
+    command: jobmanager
+    ports:
+      - "8081:8081"
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+    volumes:
+      - ./lib/flink-connector-kafka-1.17.0.jar:/opt/flink/lib/flink-connector-kafka-1.17.0.jar
+      - ./lib/kafka-clients-2.8.0.jar:/opt/flink/lib/kafka-clients-2.8.0.jar
+      - ./app:/app
+
+  taskmanager:
+    image: flink:1.17
+    command: taskmanager
+    depends_on:
+      - jobmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+      - TASK_MANAGER_NUMBER_OF_TASK_SLOTS=2
+    volumes:
+      - ./lib/flink-connector-kafka-1.17.0.jar:/opt/flink/lib/flink-connector-kafka-1.17.0.jar
+      - ./lib/kafka-clients-2.8.0.jar:/opt/flink/lib/kafka-clients-2.8.0.jar
+      - ./app:/app
+
+  # client:
+  #   image: flink:1.17
+  #   depends_on:
+  #     - jobmanager
+  #     - kafka
+  #   entrypoint: /bin/bash
+  #   stdin_open: true
+  #   tty: true
+  #   volumes:
+  #     - ./app:/app
+  #     - ./lib/flink-connector-kafka-1.17.0.jar:/opt/flink/lib/flink-connector-kafka-1.17.0.jar
