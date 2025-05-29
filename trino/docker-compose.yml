@@ -1,6 +1,29 @@
 version: "3"
 
 services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: trino
+      POSTGRES_PASSWORD: trino
+      POSTGRES_DB: demo
+    ports:
+      - "5432:5432"
+    networks:
+      - trino-network
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: demo
+      MYSQL_USER: trino
+      MYSQL_PASSWORD: trino
+    ports:
+      - "3306:3306"
+    networks:
+      - trino-network
+
   coordinator:
     image: trinodb/trino:latest
     container_name: trino-coordinator
