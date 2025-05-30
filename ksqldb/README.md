@@ -4,6 +4,12 @@
 * It streams, transforms, aggregates and pushes output to another kafka topic
 * Why should you use it? You don't have a Java team to use Flink and you have SQL teams
 
+## Features
+* Stream Join with time window
+* Materialized views (pushes it into kafka topic)
+* UDFs and Custom  UDFs
+* https://github.com/confluentinc/ksql
+
 
 ## Setup
 
