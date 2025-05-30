@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  consul:
+    image: consul:1.15
+    container_name: consul
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    command: >
+      consul agent -server -bootstrap-expect=1 -ui -client=0.0.0.0
+      -data-dir=/consul/data -config-dir=/consul/config
+    volumes:
+      - consul_data:/consul/data
+    networks:
+      - consul_network
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  app1:
+    build: .
+    container_name: app1
+    environment:
+      - SERVICE_NAME=app1
+      - SERVICE_PORT=8080
+      - CONSUL_URL=consul:8500
+    ports:
+      - "8080:8080"
+    depends_on:
+      consul:
+        condition: service_healthy
+    networks:
+      - consul_network
+
+  app2:
+    build: .
+    container_name: app2
+    environment:
+      - SERVICE_NAME=app2
+      - SERVICE_PORT=8081
+      - CONSUL_URL=consul:8500
+    ports:
+      - "8081:8081"
+    depends_on:
+      consul:
+        condition: service_healthy
+    networks:
+      - consul_network
+
+  app3:
+    build: .
+    container_name: app3
+    environment:
+      - SERVICE_NAME=app3
+      - SERVICE_PORT=8082
+      - CONSUL_URL=consul:8500
+    ports:
+      - "8082:8082"
+    depends_on:
+      consul:
+        condition: service_healthy
+    networks:
+      - consul_network
+
+volumes:
+  consul_data:
+
+networks:
+  consul_network:
+    driver: bridge
