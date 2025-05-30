@@ -27,7 +27,6 @@ kafka-console-producer --broker-list kafka:9092 --topic input-topic
 
 * For the Kafka Stateful Processing example
 ```bash
-
 flink run -c StatefulUserEventCounter /app/target/scala-2.12/flink-scala-kafka_2.12-0.1.jar
 
 kafka-console-producer --broker-list kafka:9092 --topic user-events
