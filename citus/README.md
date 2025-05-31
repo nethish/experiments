@@ -3,6 +3,11 @@
 * Workers query for the data, and coordinator combines and aggregates data if needed.
 * By default, Citus creates 32 shards when you distribute a table using create_distributed_table() without specifying a shard count.
 
+## Limitations
+* Cross shard foreign keys are not allowed
+* No unique across shards
+* Cross shard joins have limitations or expensive
+
 ## Setup
 Once the 3 containers come up, 
 ```bash
