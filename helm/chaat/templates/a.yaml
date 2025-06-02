@@ -1,0 +1,13 @@
+{{- define "mychart.resourceSpecificLabel" -}}
+  resource: my-specific-app
+{{- end -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mychart.fullname" . }}-configmap
+  labels:
+    {{- include "mychart.commonLabels" . | nindent 4 }}
+    {{- include "mychart.resourceSpecificLabel" . | nindent 4 }} # Using the template defined in this same file
+data:
+  myvalue: "Hello from ConfigMap"
