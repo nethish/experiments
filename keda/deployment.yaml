@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 1 # Start with 1 replica
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        resources: # <--- ADD THIS SECTION
+          requests:
+            cpu: "100m" # Request 100 milliCPU (0.1 CPU core)
+          # You can also add limits, but requests are mandatory for CPU autoscaling
+          # limits:
+          #   cpu: "200m"

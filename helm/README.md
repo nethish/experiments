@@ -18,4 +18,18 @@ helm uninstall mysql-1612624192
 ```bash
 helm create chaat
 helm install --dry-run --debug my-release chaat
+helm package .
+
+# Push the chart to helm repo
+helm add repo chaat https://charts.com
+
+```
+
+```yaml
+# Declare it as dependency in Chart.yaml
+# This will pull the dep and wire the definitions wherever required.
+dependencies:
+  - name: chaat
+    version: 0.6.0
+    repository: "oci://charts.com/charts/chaat"
 ```
