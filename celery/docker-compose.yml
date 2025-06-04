@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_USER: celery
+      POSTGRES_PASSWORD: celery
+      POSTGRES_DB: celery_db
+    ports:
+      - "5432:5432"
