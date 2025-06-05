@@ -16,7 +16,7 @@ services:
       - superset-net
 
   superset:
-    image: apache/superset:latest
+    image: apache/superset:latest-dev
     depends_on:
       - postgres
     environment:
