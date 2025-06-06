@@ -1,6 +1,8 @@
 # NGINX
 A single proxy server that handles all the incoming connections, and forwards it to backend servers based on different paths
 
+Nginx usually streams the response to the downstream servers. The response end is either marked using `Content-Length: 100` header or `Transfer Encoding: chucked` marks it's end with empty chunk
+
 ## Load Balancing
 The upstream section defines list of servers for which the traffic will be routed in round robin fashion
 
@@ -11,7 +13,13 @@ Usually there are as many workers as the number of CPUs. Each worker can handle 
 Learnt that `localtest.me` simply resolves to `127.0.0.1` in our machine.
 So, `api.localtest.me`, `notapi.localtest.me` is actually possible and different subdomains can actually be tested in local 
 
-The `Host` header will be set to the domain name `Host: api.localtest.me`, and nginx can route the requests based on this header.
+The `Host` header will be set to the domain name `Host: api.localtest.me`, and nginx can route the requests based on this header. The Host header based routing is part of HTTP1.1 spec
+
+Quote the HTTP 1.1 RFC
+
+```
+The "Host" header field in a request provides the host and port information from the target URI, enabling the origin server to distinguish among resources while servicing requests for multiple host names.
+```
 
 The below URLs will all resolve correctly
 
