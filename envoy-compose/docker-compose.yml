@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.30-latest
+    container_name: envoy
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+    ports:
+      - "10000:10000"  # public port to access Envoy
+      - "9901:9901"    # admin interface
+    depends_on:
+      - httpbin
+
+  httpbin:
+    image: kennethreitz/httpbin
+    container_name: httpbin
+    expose:
+      - "80"
