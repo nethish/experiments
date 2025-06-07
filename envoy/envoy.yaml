@@ -22,6 +22,10 @@ static_resources:
                   retry_policy:
                     retry_on: 5xx
                     num_retries: 2
+                request_headers_to_add:
+                - header:
+                    key: x-custom-header
+                    value: hello-from-envoy
           http_filters:
           - name: envoy.filters.http.local_ratelimit
             typed_config:
