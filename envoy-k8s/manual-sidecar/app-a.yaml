@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-a
+spec:
+  containers:
+  - name: app
+    image: kennethreitz/httpbin
+    ports:
+    - containerPort: 8080
+  - name: envoy
+    image: envoyproxy/envoy:v1.30-latest
+    ports:
+    - containerPort: 15000
+    volumeMounts:
+    - name: envoy-config
+      mountPath: /etc/envoy
+      readOnly: true
+  volumes:
+  - name: envoy-config
+    configMap:
+      name: envoy-app-a-config

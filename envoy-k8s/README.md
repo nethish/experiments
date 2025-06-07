@@ -28,5 +28,29 @@ curl http://127.0.0.1:54839
 
 kubectl port-forward pod/envoy 9901:9901
 
-```
 
+```
+## Experiment 2
+Here the envoy runs as sidecar for both app-a and app-b. The envoy config knows how to reach the other service
+
+```bash
+kubectl create configmap envoy-app-a-config --from-file=envoy.yaml=envoy-app-a.yaml
+kubectl create configmap envoy-app-b-config --from-file=envoy.yaml=envoy-app-b.yaml
+
+
+kubectl apply -f app-a.yaml
+kubectl apply -f app-b.yaml
+
+kubectl port-forward pod/app-a 15000:15000
+
+curl http://localhost:15000/anything -H "Host: app-b.default.svc.cluster.local"
+
+kubectl exec -it app-a -- curl http://app-b_service/anything
+
+# If you want logs of container running inside a pod
+kubectl logs app-a -c envoy
+kubectl logs app-b -c envoy
+
+
+
+```
