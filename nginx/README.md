@@ -41,3 +41,19 @@ server_name _;  # catch-all or fallback
 * Path rewrites
 * Rate Limiter
 * Doesn't support dynamic discovery of nodes. Have to integrate with Consul or Kubernetes to reload the config
+
+## Misc
+`proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;` forwards the remote client's IP in this header
+
+An example
+
+```nginx
+location / {
+    proxy_pass http://backend;
+    
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
