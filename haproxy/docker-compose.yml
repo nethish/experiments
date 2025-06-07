@@ -1,0 +1,34 @@
+version: "3"
+
+services:
+  haproxy:
+    image: haproxy:2.8
+    container_name: haproxy
+    ports:
+      - "8404:8404"
+      - "8080:80"         # Expose HAProxy port 80 as 8080 on host
+    volumes:
+      - ./l4.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - web1
+      - web2
+    networks:
+      - haproxy-net
+
+  web1:
+    image: nginx:alpine
+    container_name: web1
+    networks:
+      - haproxy-net
+    command: ["sh", "-c", "echo 'Hello from Web1' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"]
+
+  web2:
+    image: nginx:alpine
+    container_name: web2
+    networks:
+      - haproxy-net
+    command: ["sh", "-c", "echo 'Hello from Web2' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"]
+
+networks:
+  haproxy-net:
+    driver: bridge
