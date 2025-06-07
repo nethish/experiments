@@ -1,6 +1,14 @@
 # HAProxy
 High Availability Proxy
 
+## Features
+* Health checks
+* Load balancing - least conn, source ip, uri, random
+* TLS Termination
+* ACL
+* Effective connection reuse for backend servers
+* Custom Lua scripts
+
 ## As HTTP Proxy
 It can act as either L4 or L7 proxy. For L7 proxy use `haproxy.cfg`. This will only forward http requests to the server
 
@@ -18,3 +26,5 @@ nc localhost 8080
 GET / HTTP/1.1
 Host: localhost
 ```
+
+Note: Nginx can also act as L4 proxy when you use `stream` context, but that's like addon.
