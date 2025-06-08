@@ -18,6 +18,13 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+
+	// ✅ typed clientset
+	//
+	"k8s.io/client-go/kubernetes" // ✅ typed clientset
 )
 
 type MySQLInstanceSpec struct {
@@ -78,9 +85,58 @@ func main() {
 		time.Second*30,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				raw := obj.(*unstructured.Unstructured).Object
-				time.Sleep(5 * time.Second)
-				handleMySQL(raw)
+				u := obj.(*unstructured.Unstructured)
+				name := u.GetName()
+				ns := u.GetNamespace()
+				spec := u.Object["spec"].(map[string]interface{})
+				version := spec["version"].(string)
+
+				// Create Deployment for MySQL
+				dep := &appsv1.Deployment{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "mysql-" + name,
+						Namespace: ns,
+						Labels: map[string]string{
+							"app": "mysql",
+							"cr":  name,
+						},
+					},
+					Spec: appsv1.DeploymentSpec{
+						Replicas: int32Ptr(1),
+						Selector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{"app": "mysql", "cr": name},
+						},
+						Template: corev1.PodTemplateSpec{
+							ObjectMeta: metav1.ObjectMeta{
+								Labels: map[string]string{"app": "mysql", "cr": name},
+							},
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										Name:  "mysql",
+										Image: "mysql:" + version,
+										Ports: []corev1.ContainerPort{{ContainerPort: 3306}},
+										Env: []corev1.EnvVar{
+											{Name: "MYSQL_ROOT_PASSWORD", Value: "password"},
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+
+				// Create it using typed client
+				clientset, err := kubernetes.NewForConfig(config)
+				if err != nil {
+					panic(err)
+				}
+				_, err = clientset.AppsV1().Deployments(ns).Create(context.TODO(), dep, metav1.CreateOptions{})
+				if err != nil {
+					fmt.Println("Error creating deployment:", err)
+				} else {
+					fmt.Println("Deployment created for MySQLInstance:", name)
+				}
 			},
 			UpdateFunc: func(_, newObj interface{}) {
 				raw := newObj.(*unstructured.Unstructured).Object
@@ -88,10 +144,20 @@ func main() {
 				handleMySQL(raw)
 			},
 			DeleteFunc: func(obj interface{}) {
-				raw := obj.(*unstructured.Unstructured).Object
-				name := raw["metadata"].(map[string]interface{})["name"]
-				time.Sleep(5 * time.Second)
-				fmt.Println("Deleted MySQLInstance:", name)
+				u := obj.(*unstructured.Unstructured)
+				name := u.GetName()
+				ns := u.GetNamespace()
+
+				clientset, err := kubernetes.NewForConfig(config)
+				if err != nil {
+					panic(err)
+				}
+				err = clientset.AppsV1().Deployments(ns).Delete(context.TODO(), "mysql-"+name, metav1.DeleteOptions{})
+				if err != nil {
+					fmt.Println("Error deleting deployment:", err)
+				} else {
+					fmt.Println("Deleted deployment for:", name)
+				}
 			},
 		},
 	)
@@ -117,3 +183,5 @@ func handleMySQL(obj map[string]interface{}) {
 	fmt.Printf("Reconciling MySQLInstance %s: version=%s storage=%s\n",
 		mysql.Name, mysql.Spec.Version, mysql.Spec.Storage)
 }
+
+func int32Ptr(i int32) *int32 { return &i }
