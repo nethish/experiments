@@ -1,0 +1,10 @@
+# mysqlinstance-sample.yaml
+apiVersion: mysql.my.domain/v1alpha1
+kind: MySQLInstance
+metadata:
+  name: test-db
+spec:
+  version: "8.0"
+  storage: "5Gi"
+  username: "root"
+  password: "password123"
