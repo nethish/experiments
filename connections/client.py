@@ -1,4 +1,5 @@
 import socket
+import time
 
 HOST = "127.0.0.1"
 PORT = 8080
@@ -10,7 +11,9 @@ for i in range(NUM_CONNECTIONS):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(1)  # timeout to avoid hanging forever
+        start = time.time()
         s.connect((HOST, PORT))
+        print((time.time() - start) * 1000, "milliseconds")
         sockets.append(s)
         print(f"Connection {i + 1} succeeded")
     except Exception as e:
