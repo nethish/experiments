@@ -73,6 +73,8 @@ openssl s_server -accept 8443 \
   -CAfile ca-chain.cert.pem \
   -Verify 1
 
+# Verify 1 - this will now verify the client certificate as well
+
 
 openssl s_client -connect localhost:8443 \
   -cert client/client.cert.pem \
