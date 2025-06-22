@@ -63,3 +63,15 @@ openssl s_client -connect google.com:443
 # Show supported ciphers
 openssl ciphers -v
 ```
+
+## Popular PKCS
+* PKCS#1 RSA Cryptography Standard
+* PKCS#3 Diffie-Hellman Key Exchange
+* PKCS#5 Password-Based Encryption (PBE)
+* PKCS#7 Cryptographic Message Syntax (CMS)
+* PKCS#8 Private Key Information Syntax
+* PKCS#10 Certificate Signing Request (CSR)
+* PKCS#11 Cryptographic Token Interface (API)
+* PKCS#12 Personal Information Exchange Syntax
+* PKCS#15 Cryptographic Token Information Format
+
