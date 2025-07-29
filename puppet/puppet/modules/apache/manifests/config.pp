@@ -12,6 +12,7 @@ class apache::config {
     owner   => 'root',
     group   => 'root',
     mode    => '0644',
+    notify  => Service['apache2'],
   }
 
 }
