@@ -20,5 +20,7 @@ node 'agent1.puppet' {
     content => "bye nethish!",
     mode    => '0644',
   }
+
+  include apache
 }
 
