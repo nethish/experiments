@@ -16,8 +16,7 @@ node default {
     content => "bye nethish!",
     mode    => '0644',
   }
+
+  include apache
 }
 
-node default {
-    include apache
-}

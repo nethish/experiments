@@ -11,6 +11,7 @@ services:
       - PUPPETSERVER_JAVA_ARGS=-Xms512m -Xmx512m
     volumes:
       - ./puppet/manifests:/etc/puppetlabs/code/environments/production/manifests
+      - ./puppet/modules:/etc/puppetlabs/code/environments/production/modules
     networks:
       - puppetnet
 
