@@ -45,3 +45,5 @@ Checkout the `modules/apache/templates/vhost.conf.erb` file for example
 
 ## Hiera
 Hiera allows you to separate data from code. Instead of hardcoding values inside your manifests, you store them in YAML files and use lookup() to fetch them.
+
+You can also use `notify` directive to notify and restart services when something changes
