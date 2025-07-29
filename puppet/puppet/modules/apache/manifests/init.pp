@@ -1,6 +1,12 @@
 class apache {
   include apache::install
   include apache::config
+
+  service { 'apache2':
+    ensure => running,
+    enable => true,
+  }
+
 }
 
 # class apache {

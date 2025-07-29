@@ -1,4 +1,6 @@
 class apache::config {
+  $port      = lookup('apache::port')
+
   file { '/var/www/html/index.html':
     ensure  => file,
     source => 'puppet:///modules/apache/index.html',
@@ -11,4 +13,5 @@ class apache::config {
     group   => 'root',
     mode    => '0644',
   }
+
 }

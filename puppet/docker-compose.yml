@@ -12,6 +12,8 @@ services:
     volumes:
       - ./puppet/manifests:/etc/puppetlabs/code/environments/production/manifests
       - ./puppet/modules:/etc/puppetlabs/code/environments/production/modules
+      - ./puppet/hiera.yaml:/etc/puppetlabs/code/environments/production/hiera.yaml
+      - ./puppet/data:/etc/puppetlabs/code/environments/production/data
     networks:
       - puppetnet
 
