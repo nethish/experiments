@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  puppetserver:
+    image: puppet/puppetserver
+    hostname: puppetserver
+    container_name: puppetserver
+    ports:
+      - "8140:8140"
+    environment:
+      - PUPPETSERVER_JAVA_ARGS=-Xms512m -Xmx512m
+    volumes:
+      - ./puppet/manifests:/etc/puppetlabs/code/environments/production/manifests
+    networks:
+      - puppetnet
+
+  puppet-agent1:
+    image: puppet/puppet-agent
+    hostname: agent1.puppet
+    depends_on:
+      - puppetserver
+    entrypoint: /bin/bash
+    command: ["-c", "sleep infinity"]
+    networks:
+      - puppetnet
+
+  puppet-agent2:
+    image: puppet/puppet-agent
+    hostname: agent2.puppet
+    depends_on:
+      - puppetserver
+    entrypoint: /bin/bash
+    command: ["-c", "sleep infinity"]
+    networks:
+      - puppetnet
+
+networks:
+  puppetnet:
