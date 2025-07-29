@@ -5,6 +5,10 @@ node default {
     mode    => '0644',
   }
 
+  include apache
+}
+
+node 'agent1.puppet' {
   file { '/tmp/hinethish':
     ensure  => present,
     content => "Hi nethish!",
@@ -16,7 +20,5 @@ node default {
     content => "bye nethish!",
     mode    => '0644',
   }
-
-  include apache
 }
 

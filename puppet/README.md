@@ -33,3 +33,6 @@ In Puppet, when you create a module, the file manifests/init.pp is special:
 * It defines the main class of the module.
 * The class name must match the module name (e.g., apache).
 * Puppet automatically knows where to look for it when you do include apache.
+
+## Node Definitions
+Applies the config only to those specific nodes
