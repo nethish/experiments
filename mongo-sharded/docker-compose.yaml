@@ -44,7 +44,7 @@ services:
       - configsvr
       - shard1
       - shard2
-    command: mongos --configdb configReplSet/configsvr:27019 --port 27020
+    command: mongos --configdb configReplSet/configsvr:27019 --port 27020 --bind_ip_all
     ports:
       - 27020:27020
     networks:
