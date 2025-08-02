@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  configsvr:
+    image: mongo:latest
+    container_name: configsvr
+    command: --configsvr --replSet configReplSet --port 27019
+    restart: always
+    ports:
+      - 27019:27019
+    volumes:
+      - configdb:/data/db
+    networks:
+      - mongo-cluster
+
+  shard1:
+    image: mongo:latest
+    container_name: shard1
+    command: --shardsvr --replSet shard1ReplSet --port 27018
+    restart: always
+    ports:
+      - 27018:27018
+    volumes:
+      - shard1db:/data/db
+    networks:
+      - mongo-cluster
+
+  shard2:
+    image: mongo:latest
+    container_name: shard2
+    command: --shardsvr --replSet shard2ReplSet --port 27017
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - shard2db:/data/db
+    networks:
+      - mongo-cluster
+
+  mongos:
+    image: mongo:latest
+    container_name: mongos
+    depends_on:
+      - configsvr
+      - shard1
+      - shard2
+    command: mongos --configdb configReplSet/configsvr:27019 --port 27020
+    ports:
+      - 27020:27020
+    networks:
+      - mongo-cluster
+
+volumes:
+  configdb:
+  shard1db:
+  shard2db:
+
+networks:
+  mongo-cluster:
