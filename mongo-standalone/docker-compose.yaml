@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo-standalone
+    restart: always
+    ports:
+      - "27017:27017"
+    command: ["--bind_ip_all", "--noauth"]
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
