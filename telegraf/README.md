@@ -28,3 +28,14 @@ SELECT * FROM cpu LIMIT 5;
 # * Default Bucket = telegraf
 # * Token = my-super-secret-token
 ```
+
+
+```bash
+# Example query that you can run in grafana or `influx query 'query'`
+from(bucket: "telegraf")
+  |> range(start: -5m)
+  |> filter(fn: (r) => r._measurement == "cpu")
+  |> filter(fn: (r) => r._field == "usage_user")
+  |> sort(columns: ["_value"], desc: true)
+  |> limit(n:5)
+```
