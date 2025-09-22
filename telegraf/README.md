@@ -2,6 +2,9 @@
 
 Publish metrics to influxdb (a time series database). telegraf is an opensource metric exporter.
 
+Telegraf is an open-source agent for collecting, processing, and sending metrics and events.
+It’s part of the TICK stack (Telegraf → InfluxDB → Chronograf → Kapacitor).
+
 ```bash
 # After docker compose up
 
