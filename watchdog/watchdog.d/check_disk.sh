@@ -1,5 +1,6 @@
 #!/bin/bash
 LOG="/var/log/watchdog_test.log"
+echo "Arguments: $@" >>"$LOG"
 echo "$(date) - check_disk.sh running" >>"$LOG"
 
 USAGE=$(df / | awk 'NR==2 {print $5}' | tr -d '%')
