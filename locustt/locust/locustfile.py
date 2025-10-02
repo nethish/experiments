@@ -19,4 +19,7 @@ class LoggedInUser(HttpUser):
 
     @task
     def dashboard(self):
-        self.client.get("/dashboard")
+        with self.client.get("/dashboard", catch_response=True) as response:
+            if response.status_code != 200:
+                # Mark as failure with reason
+                response.failure(f"Unexpected status {response.status_code}: {response.text}")
