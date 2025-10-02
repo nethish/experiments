@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins-master
+    user: root
+    ports:
+      - "8080:8080"   # Jenkins UI
+      - "50000:50000" # JNLP agent connections
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - jenkins-net
+
+  agent1:
+    image: jenkins/agent
+    container_name: jenkins-agent1
+    depends_on:
+      - jenkins
+    environment:
+      - JENKINS_URL=http://jenkins:8080
+      - JENKINS_AGENT_NAME=agent1
+      - JENKINS_SECRET=ba9d88150f7783d8e0111c3b9298dcecbf9cf2c900d8d21e9ea16555b03299a0
+      - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
+    networks:
+      - jenkins-net
+
+  agent2:
+    image: jenkins/agent
+    container_name: jenkins-agent2
+    depends_on:
+      - jenkins
+    environment:
+      - JENKINS_URL=http://jenkins:8080
+      - JENKINS_AGENT_NAME=agent2
+      - JENKINS_SECRET=0631bbc4f3a8acc8e8b15585cd3431ccff56a71a39988de227192d57a1d6aba5
+      - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
+    networks:
+      - jenkins-net
+
+  gitea:
+    image: gitea/gitea:1.22.0
+    container_name: gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+    restart: always
+    ports:
+      - "3000:3000"   # Web UI
+      - "222:22"      # SSH for Git
+    volumes:
+      - gitea_data:/data
+    networks:
+      - jenkins-net
+
+volumes:
+  jenkins_home:
+  gitea_data:
+
+networks:
+  jenkins-net:
+    driver: bridge
