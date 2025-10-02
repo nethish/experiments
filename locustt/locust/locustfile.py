@@ -1,6 +1,6 @@
 from locust import HttpUser, task, between
 
-class GoUser(HttpUser):
+class GuestUser(HttpUser):
     wait_time = between(1, 3)
 
     @task
@@ -11,7 +11,12 @@ class GoUser(HttpUser):
     def about(self):
         self.client.get("/about")
 
-    @task
-    def login(self):
+class LoggedInUser(HttpUser):
+    wait_time = between(1, 2)
+
+    def on_start(self):
         self.client.post("/login", json={"username":"user","password":"pass"})
 
+    @task
+    def dashboard(self):
+        self.client.get("/dashboard")

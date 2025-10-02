@@ -7,11 +7,33 @@ services:
     ports:
       - "8080:8080"
 
-  locust:
+  locust-master:
     build: ./locust
-    container_name: locust
+    container_name: locust-master
     ports:
       - "8089:8089"
+    environment:
+      - LOCUST_MODE=master
     depends_on:
       - server
+    command: ["locust", "-f", "locustfile.py", "--master", "--host=http://server:8080"]
 
+  locust-worker-1:
+    build: ./locust
+    container_name: locust-worker-1
+    depends_on:
+      - locust-master
+      - server
+    environment:
+      - LOCUST_MODE=worker
+    command: ["locust", "-f", "locustfile.py", "--worker", "--master-host=locust-master"]
+
+  locust-worker-2:
+    build: ./locust
+    container_name: locust-worker-2
+    depends_on:
+      - locust-master
+      - server
+    environment:
+      - LOCUST_MODE=worker
+    command: ["locust", "-f", "locustfile.py", "--worker", "--master-host=locust-master"]
