@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  server:
+    build: ./server
+    container_name: go-server
+    ports:
+      - "8080:8080"
+
+  locust:
+    build: ./locust
+    container_name: locust
+    ports:
+      - "8089:8089"
+    depends_on:
+      - server
+
