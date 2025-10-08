@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  tcp_server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: tcp_server
+    ports:
+      - "5000:5000"
+
+  tcp_client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: tcp_client
+    depends_on:
+      - tcp_server
+
