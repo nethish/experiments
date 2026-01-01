@@ -1,0 +1,3 @@
+# Toy thread scheduler to understand OS schedulers better
+This c program is generated with claude.
+This c program sppins up threads, and uses builtin context save and context swap to atomically swap thread context to switch executions. There is a timer interrupt which interrupts the current thread and calls the schedule function to schedule the next runnable thread. Without the interrupt, this is not possible unless the threads themselves are cooperative (calls the schedule function). The real production code doesn't use contextswap functions and instead rely on something else as per claude. The context switches in real life OSs are done with the help of hardware timer interrupts which seems to be an interesting concept. 
